@@ -1,0 +1,68 @@
+Sure — everything from the blue boxes except the Java code, with the original numbering/order.
+
+1. Start a Hadoop container
+
+PS> cd C:\bda-labs
+PS> mkdir lab1-wordcount
+PS> cd lab1-wordcount
+PS> docker run -dit --name hadoop apache/hadoop:3.3.6 bash
+
+2. Open a shell inside the container
+
+PS> docker exec -it hadoop bash
+
+Create the Java file
+
+hadoop@a1b2c3:~$ nano WordCount.java
+
+Paste the Java code from the lab manual, then save with Ctrl+O, Enter, and exit with Ctrl+X.
+
+⸻
+
+Execution & Expected Output
+
+1. Create some input text
+
+hadoop@a1b2c3:~$ mkdir input
+hadoop@a1b2c3:~$ echo "the quick brown fox the lazy dog the fox" > input/file1.txt
+hadoop@a1b2c3:~$ echo "a quick dog and a brown fox jumped" > input/file2.txt
+
+2. Compile the program
+
+hadoop@a1b2c3:~$ export HADOOP_CLASSPATH=$(hadoop classpath)
+hadoop@a1b2c3:~$ mkdir classes
+hadoop@a1b2c3:~$ javac -classpath $HADOOP_CLASSPATH -d classes WordCount.java
+hadoop@a1b2c3:~$ jar -cvf wordcount.jar -C classes .
+
+3. Run the job
+
+hadoop@a1b2c3:~$ hadoop jar wordcount.jar WordCount input output
+
+Expected important output
+
+map 0% reduce 0%
+map 100% reduce 0%
+map 100% reduce 100%
+Map-Reduce Framework
+Map input records=2
+Map output records=17
+Combine input records=17
+Combine output records=11
+Reduce input records=11
+Reduce output records=11
+
+4. View the results
+
+hadoop@a1b2c3:~$ cat output/part-r-00000
+
+Expected:
+
+a 2
+and 1
+brown 2
+dog 2
+fox 3
+jumped 1
+lazy 1
+quick 2
+the 3
