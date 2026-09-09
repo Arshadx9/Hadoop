@@ -1,0 +1,94 @@
+
+1. Create lab folder and files
+
+PS> cd C:\bda-labs
+PS> mkdir lab2-hdfs
+PS> cd lab2-hdfs
+PS> notepad docker-compose.yml
+
+docker-compose.yml:
+
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+    env_file: ./config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+  datanode:
+    image: apache/hadoop:3.3.6
+    command: ["hdfs", "datanode"]
+    env_file: ./config
+
+Create the config:
+
+PS> notepad config
+
+config:
+
+CORE-SITE.XML_fs.default.name=hdfs://namenode
+CORE-SITE.XML_fs.defaultFS=hdfs://namenode
+HDFS-SITE.XML_dfs.namenode.rpc-address=namenode:8020
+HDFS-SITE.XML_dfs.replication=1
+
+2. Launch and format
+
+PS> docker compose up -d
+
+Wait ~15 seconds:
+
+PS> docker compose exec namenode bash
+
+Inside the container:
+
+hadoop@namenode:~$ hdfs dfs -mkdir -p /user/student
+hadoop@namenode:~$ hdfs dfs -ls /user
+
+3. Create the Java program
+
+hadoop@namenode:~$ nano HdfsDemo.java
+
+Paste the Java code from your lab manual here.
+
+4. Compile and package
+
+hadoop@namenode:~$ export HADOOP_CLASSPATH=$(hadoop classpath)
+hadoop@namenode:~$ mkdir classes
+hadoop@namenode:~$ javac -classpath $HADOOP_CLASSPATH -d classes HdfsDemo.java
+hadoop@namenode:~$ jar -cvf hdfsdemo.jar -C classes .
+
+5. Run it
+
+hadoop@namenode:~$ hadoop jar hdfsdemo.jar HdfsDemo
+
+Expected output:
+
+Wrote file: /user/student/quangle.txt
+From start : On the top of the Crumpetty Tree
+After seek : The Quangle Wangle sat
+Length : 56 bytes
+Replication: 1
+--- listStatus /user/student ---
+quangle.txt
+--- globStatus *.txt ---
+quangle.txt
+
+6. Confirm the file is on HDFS
+
+hadoop@namenode:~$ hdfs dfs -cat /user/student/quangle.txt
+
+7. Add second file and re-run
+
+hadoop@namenode:~$ echo "hello hdfs" | hdfs dfs -put - /user/student/notes.txt
+hadoop@namenode:~$ hadoop jar hdfsdemo.jar HdfsDemo
+
+8. Clean up
+
+hadoop@namenode:~$ exit
+
+Back in PowerShell:
+
+PS> docker compose down
